@@ -29,17 +29,28 @@ async function run() {
 
     const roomsCollection = client.db('splendico').collection('rooms');
 
-    app.get('/rooms', async(req, res) => {
-        const result = await roomsCollection.find().toArray();
-        res.send(result);
-    })
-
-    app.get('/rooms/:category', async(req, res) => {
-        const category = req.params.category;
-        const query = { category : category};
-        const result = await roomsCollection.find(query).toArray();
-        res.send(result);
-    })
+    app.get('/rooms', async (req, res) => {
+        try {
+            const result = await roomsCollection.find().toArray();
+            res.send(result);
+        } catch (error) {
+            console.error("Error fetching rooms:", error);
+            res.status(500).json({ error: "Internal server error" });
+        }
+    });
+    
+    app.get('/rooms/:category', async (req, res) => {
+        try {
+            const category = req.params.category;
+            const query = { category: category };
+            const result = await roomsCollection.find(query).toArray();
+            res.send(result);
+        } catch (error) {
+            console.error("Error fetching rooms by category:", error);
+            res.status(500).json({ error: "Internal server error" });
+        }
+    });
+    
     
 
     await client.db("admin").command({ ping: 1 });
