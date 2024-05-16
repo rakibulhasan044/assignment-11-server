@@ -38,6 +38,11 @@ async function run() {
             res.status(500).json({ error: "Internal server error" });
         }
     });
+
+    app.get('/roomsCount', async(req, res) => {
+      const count = await roomsCollection.estimatedDocumentCount();
+      res.send({count});
+    })
     
     app.get('/rooms/:category', async (req, res) => {
         try {
