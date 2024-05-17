@@ -32,9 +32,13 @@ async function run() {
         const page = parseInt(req.query.page) -1;
         const size = parseInt(req.query.size);
         const filter = req.query.filter;
-
+        const priceRange = req.query.priceRange;
         let query = {}
         if(filter) query = { category: filter}
+        if(priceRange) {
+          const [min, max] = priceRange.split('-').map(Number);
+          query.price = { $gte: min, $lte:max };
+        }
 
         const result = await roomsCollection
         .find(query)
@@ -50,8 +54,13 @@ async function run() {
 
     app.get("/roomsCount", async (req, res) => {
       const filter = req.query.filter;
+      const priceRange = req.query.priceRange;
       let query = {};
       if(filter) query ={ category: filter }
+      if (priceRange) {
+        const [min, max] = priceRange.split('-').map(Number);
+        query.price = { $gte: min, $lte: max };
+      }
       const count = await roomsCollection.countDocuments(query);
       res.send({ count });
     });
