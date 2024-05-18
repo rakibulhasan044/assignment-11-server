@@ -25,7 +25,7 @@ async function run() {
     // Send a ping to confirm a successful connection
 
     const roomsCollection = client.db("splendico").collection("rooms");
-    const bookingsCollection = client.db("spiendico").collection("bookings");
+    const bookingsCollection = client.db("splendico").collection("bookings");
 
     app.get("/rooms", async (req, res) => {
       try {
@@ -73,17 +73,19 @@ async function run() {
       res.send(result);
     })
 
-    app.get("/rooms/:category", async (req, res) => {
-      try {
-        const category = req.params.category;
-        const query = { category: category };
-        const result = await roomsCollection.find(query).toArray();
-        res.send(result);
-      } catch (error) {
-        console.error("Error fetching rooms by category:", error);
-        res.status(500).json({ error: "Internal server error" });
+    //room status update
+
+    app.patch('/room/:id', async(req, res) => {
+      const id = req.params.id;
+      const available = req.body;
+      const query = { _id: new ObjectId(id)};
+      const updateDoc = {
+        $set: available
       }
-    });
+      const result = await roomsCollection.updateOne(query, updateDoc);
+      res.send(result);
+
+    })
 
     //booking db
 
@@ -93,6 +95,8 @@ async function run() {
       const result = await bookingsCollection.insertOne(bookingData);
       res.send(result);
     })
+
+    
 
     await client.db("admin").command({ ping: 1 });
     console.log(
