@@ -25,6 +25,7 @@ async function run() {
     // Send a ping to confirm a successful connection
 
     const roomsCollection = client.db("splendico").collection("rooms");
+    const bookingsCollection = client.db("spiendico").collection("bookings");
 
     app.get("/rooms", async (req, res) => {
       try {
@@ -83,6 +84,15 @@ async function run() {
         res.status(500).json({ error: "Internal server error" });
       }
     });
+
+    //booking db
+
+    app.post('/booking', async(req, res) => {
+      const bookingData = req.body;
+      console.log(bookingData);
+      const result = await bookingsCollection.insertOne(bookingData);
+      res.send(result);
+    })
 
     await client.db("admin").command({ ping: 1 });
     console.log(
