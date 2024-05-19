@@ -85,7 +85,19 @@ async function run() {
       }
       const result = await roomsCollection.updateOne(query, updateDoc);
       res.send(result);
+    })
 
+    //get 6 available suite category room
+
+    app.get('/suite', async(req, res) => {
+      try {
+        const query = {category: 'SUITE', available: 'Available'};
+        const result = await roomsCollection.find(query).limit(6).toArray()
+        res.send(result);
+      } catch (error) {
+        console.error("Error fetching rooms:", error);
+        res.status(500).json({ error: "Internal server error" });
+      }
     })
 
     //booking db
