@@ -26,6 +26,7 @@ async function run() {
 
     const roomsCollection = client.db("splendico").collection("rooms");
     const bookingsCollection = client.db("splendico").collection("bookings");
+    const reviewsCollection = client.db('splendico').collection('reviews');
 
     app.get("/rooms", async (req, res) => {
       try {
@@ -112,6 +113,15 @@ async function run() {
       const query = { _id: new ObjectId(id)};
       const result = await bookingsCollection.deleteOne(query);
       res.send(result)
+    })
+
+    //post review post
+
+    app.post('/review', async(req, res) => {
+      const reviewData = req.body;
+      console.log(reviewData);
+      const result = await reviewsCollection.insertOne(reviewData);
+      res.send(result);
     })
     
 
