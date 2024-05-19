@@ -105,6 +105,14 @@ async function run() {
       res.send(result);
     })
 
+    //delete booking
+
+    app.delete('/booking/:id', async(req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id)};
+      const result = await bookingsCollection.deleteOne(query);
+      res.send(result)
+    })
     
 
     await client.db("admin").command({ ping: 1 });
