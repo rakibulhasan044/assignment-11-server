@@ -136,6 +136,15 @@ async function run() {
       res.send(result);
     })
 
+    //get review for specific room
+
+    app.get('/reviews/:roomId', async(req, res) => {
+      const roomId = req.params.roomId;
+      const query = { roomId : roomId}
+      const result = await reviewsCollection.find(query).toArray();
+      res.send(result)
+    })
+
     app.get('/reviews', async(req, res) => {
       const result = await reviewsCollection.find().limit(6).sort({date: -1 }).toArray();
       res.send(result)
