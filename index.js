@@ -135,6 +135,11 @@ async function run() {
       const result = await reviewsCollection.insertOne(reviewData);
       res.send(result);
     })
+
+    app.get('/reviews', async(req, res) => {
+      const result = await reviewsCollection.find().limit(6).sort({date: -1 }).toArray();
+      res.send(result)
+    })
     
 
     await client.db("admin").command({ ping: 1 });
