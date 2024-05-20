@@ -2,6 +2,7 @@ const express = require("express");
 const cors = require("cors");
 const jwt = require('jsonwebtoken');
 const cookieParser = require('cookie-parser');
+const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 
 require("dotenv").config();
 const port = process.env.PORT || 6001;
@@ -18,8 +19,29 @@ const corsOption = {
 
 app.use(cors(corsOption));
 app.use(express.json());
+app.use(cookieParser())
 
-const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
+//verify jwt middleware
+
+const verifyToken = (req, res, next) => {
+  const token = req.cookies?.token;
+  if(!token) {
+    return res.status(401).send({ message: 'unauthoeized access' })
+  }
+  if(token) {
+    jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decoded) => {
+      if(err) {
+        console.log(err);
+        return res.status(401).send( { message: 'unathorized access'})
+      }
+      console.log(decoded);
+      req.user = decoded
+      next()
+    })
+  }
+}
+
+
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.erh7g8c.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
 
 const client = new MongoClient(uri, {
@@ -148,8 +170,13 @@ async function run() {
 
     //get all bookings by email
 
-    app.get('/bookings/:email', async(req, res) => {
+    app.get('/bookings/:email',verifyToken, async(req, res) => {
+      const tokenEmail = req.user.email;
       const email = req.params.email;
+      
+      if(tokenEmail !== email) {
+        return res.status(403).send({ message: 'forbidden access'})
+      }
       const query = { email: email };
       const result = await bookingsCollection.find(query).toArray();
       res.send(result);
