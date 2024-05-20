@@ -1,11 +1,22 @@
 const express = require("express");
 const cors = require("cors");
+const jwt = require('jsonwebtoken');
+const cookieParser = require('cookie-parser');
+
 require("dotenv").config();
 const port = process.env.PORT || 6001;
 
 const app = express();
+const corsOption = {
+  origin: [
+    'http://localhost:5173',
+    'http://localhost:5174',
+],
+  credentials: true,
+  optionSuccessStatus: 200,
+}
 
-app.use(cors());
+app.use(cors(corsOption));
 app.use(express.json());
 
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
@@ -27,6 +38,20 @@ async function run() {
     const roomsCollection = client.db("splendico").collection("rooms");
     const bookingsCollection = client.db("splendico").collection("bookings");
     const reviewsCollection = client.db('splendico').collection('reviews');
+
+    //jwt generate
+    app.post('/jwt', async (req,res) => {
+      const user = req.body;
+      const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, {
+        expiresIn: '1d'
+      })
+      res.cookie('token', token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production' ? true : false,
+        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'strict',
+      })
+      .send({ success: true})
+    })
 
     app.get("/rooms", async (req, res) => {
       try {
@@ -150,7 +175,6 @@ async function run() {
       res.send(result)
     })
     
-
     await client.db("admin").command({ ping: 1 });
     console.log(
       "Pinged your deployment. You successfully connected to MongoDB!"
