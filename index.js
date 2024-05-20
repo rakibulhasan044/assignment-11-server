@@ -12,9 +12,10 @@ const corsOption = {
   origin: [
     'http://localhost:5173',
     'http://localhost:5174',
+    'https://assignment-19a2a.web.app',
+    'https://assignment-19a2a.firebaseapp.com'
 ],
   credentials: true,
-  optionSuccessStatus: 200,
 }
 
 app.use(cors(corsOption));
@@ -41,6 +42,11 @@ const verifyToken = (req, res, next) => {
   }
 }
 
+const cookieOptions = {
+  httpOnly: true,
+  secure: process.env.NODE_ENV === "production" ? true : false,
+  sameSite: process.env.NODE_ENV === "production" ? "none" : "strict",
+};
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.erh7g8c.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
 
@@ -54,7 +60,7 @@ const client = new MongoClient(uri, {
 
 async function run() {
   try {
-    await client.connect();
+    //await client.connect();
     // Send a ping to confirm a successful connection
 
     const roomsCollection = client.db("splendico").collection("rooms");
@@ -67,25 +73,16 @@ async function run() {
       const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, {
         expiresIn: '1d'
       })
-      res.cookie('token', token, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production' ? true : false,
-        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'strict',
-      })
-      .send({ success: true})
+      res.cookie('token', token, cookieOptions).send({ success: true})
     })
 
     //clear token on logout
 
-    app.get('/logout', (req,res) => {
-      res.clearCookie('token', {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production' ? true : false,
-        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'strict',
-        maxAge: 0,
-      })
-      .send({ success: true})
-    })
+    app.post("/logout", async (req, res) => {
+      const user = req.body;
+      console.log("logging out user: ", user);
+      res.clearCookie("token", { ...cookieOptions, maxAge: 0 }).send({ success: true });
+    });
 
     app.get("/rooms", async (req, res) => {
       try {
@@ -100,7 +97,6 @@ async function run() {
           const [min, max] = priceRange.split('-').map(Number);
           query.price = { $gte: min, $lte:max };
         }
-
         const result = await roomsCollection
         .find(query)
         .skip(page * size)
@@ -214,7 +210,7 @@ async function run() {
       res.send(result)
     })
     
-    await client.db("admin").command({ ping: 1 });
+    //await client.db("admin").command({ ping: 1 });
     console.log(
       "Pinged your deployment. You successfully connected to MongoDB!"
     );
